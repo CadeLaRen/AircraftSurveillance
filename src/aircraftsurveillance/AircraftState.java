@@ -42,14 +42,32 @@ public class AircraftState {
     private double latitude = 0;
     private double longitude = 0;
     private boolean airborne = false;
+    private double distanceFromReceiver = 0;
+    private double bearingFromReceiver = 0;
     private Instant positionTimestamp = Instant.MIN;
 
-    public void setPosition(double latitude, double longitude, boolean airborne, Instant positionTimestamp) {
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.airborne = airborne;
-        this.positionTimestamp = positionTimestamp;
-        updateTimestamp = positionTimestamp;
+    public void setPosition(AircraftPosition aircraftPosition) {
+        if (aircraftPosition.getPosition() != null) {
+            latitude = aircraftPosition.getPosition().getLatitude();
+            longitude = aircraftPosition.getPosition().getLongitude();
+            airborne = aircraftPosition.isAirborne();
+
+            if (aircraftPosition.getReceiverPosition() != null) {
+                try {
+                    distanceFromReceiver = Position.distance(aircraftPosition.getReceiverPosition(), aircraftPosition.getPosition()) * 0.000539957;  // convert meters to nautical miles
+                    bearingFromReceiver = Position.course(aircraftPosition.getReceiverPosition(), aircraftPosition.getPosition());
+                } catch (Position.IterationLimitExceeded iterationLimitExceeded) {
+                    distanceFromReceiver = 0;
+                    bearingFromReceiver = 0;
+                }
+            } else {
+                distanceFromReceiver = 0;
+                bearingFromReceiver = 0;
+            }
+
+            positionTimestamp = aircraftPosition.getPositionTimestamp();
+            updateTimestamp = aircraftPosition.getPositionTimestamp();
+        }
     }
 
     public double getLatitude() {
@@ -62,6 +80,14 @@ public class AircraftState {
 
     public boolean isAirborne() {
         return airborne;
+    }
+
+    public double getDistanceFromReceiver() {
+        return distanceFromReceiver;
+    }
+
+    public double getBearingFromReceiver() {
+        return bearingFromReceiver;
     }
 
     public Instant getPositionTimestamp() {
@@ -459,6 +485,8 @@ public class AircraftState {
         copy.latitude = aircraftState.latitude;
         copy.longitude = aircraftState.longitude;
         copy.airborne = aircraftState.airborne;
+        copy.distanceFromReceiver = aircraftState.distanceFromReceiver;
+        copy.bearingFromReceiver = aircraftState.bearingFromReceiver;
         copy.positionTimestamp = aircraftState.positionTimestamp;
 
         copy.altitude = aircraftState.altitude;
@@ -545,6 +573,12 @@ public class AircraftState {
             return false;
         }
         if (airborne != aircraftState.airborne) {
+            return false;
+        }
+        if (distanceFromReceiver != aircraftState.distanceFromReceiver) {
+            return false;
+        }
+        if (bearingFromReceiver != aircraftState.bearingFromReceiver) {
             return false;
         }
         if (positionTimestamp != aircraftState.positionTimestamp) {
@@ -690,6 +724,10 @@ public class AircraftState {
         sb.append("longitude = " + longitude);
         sb.append(System.lineSeparator());
         sb.append("airborne = " + airborne);
+        sb.append(System.lineSeparator());
+        sb.append("distanceFromReceiver = " + distanceFromReceiver);
+        sb.append(System.lineSeparator());
+        sb.append("bearingFromReceiver = " + bearingFromReceiver);
         sb.append(System.lineSeparator());
         sb.append("positionTimestamp = " + positionTimestamp);
         sb.append(System.lineSeparator());

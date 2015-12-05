@@ -11,16 +11,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
 public class SurveillanceSimulator {
 
-    private Position receiverPosition = null;
     private List<Aircraft> aircraftList = new LinkedList<Aircraft>();
     private Instant simulationTime = Instant.MIN;
 
@@ -29,27 +25,33 @@ public class SurveillanceSimulator {
 
     private static final Duration TRACK_TIME_LIMIT = Duration.ofMinutes(5);
     private static final int MIN_TRACK_POINTS = 100;
-    long aircraftTrackCount = 0;
+    private long aircraftTrackCount = 0;
 
     // message counts
-    long surveillanceCount = 0;
-    long transponderCount = 0;
-    long modeSCount = 0;
-    long extendedSquitterCount = 0;
-    long[] adsb1090TypeCounts = new long[32];
+    private long surveillanceCount = 0;
+    private long transponderCount = 0;
+    private long modeSCount = 0;
+    private long extendedSquitterCount = 0;
+    private long[] adsb1090TypeCounts = new long[32];
 
     // receiver performance
-    double[] distances = new double[360];
-    String[] aircraftAtMaxDistance = new String[360];
-    List<Position> positionList = new LinkedList<Position>();
+    private static final int MIN_PERFORMANCE_POINTS = 100;
+    private final long[] distanceHistogram = new long[300];
+
+    // time stats
+    private Instant firstMessageTimestamp = Instant.MAX;
+    private Instant lastMessageTimestamp = Instant.MIN;
+    private Instant previousMessageTimestamp = Instant.MAX;
+    private Duration maxMessageGap = Duration.ZERO;
+    private Instant maxMessageGapStart = Instant.MAX;
+    private Instant maxMessageGapEnd = Instant.MIN;
 
     public SurveillanceSimulator() {
         for (int i = 0; i < adsb1090TypeCounts.length; i++) {
             adsb1090TypeCounts[i] = 0;
         }
-        for (int i = 0; i < distances.length; i++) {
-            distances[i] = 0;
-            aircraftAtMaxDistance[i] = "";
+        for (int i = 0; i < distanceHistogram.length; i++) {
+            distanceHistogram[i] = 0;
         }
     }
 
@@ -69,11 +71,16 @@ public class SurveillanceSimulator {
         File[] files = directory.listFiles();
         files = filterAndSortFiles(files);
 
-        System.out.println("Reading input from " + directory);
+        Instant start = Instant.now();
+        System.out.println("Reading input from " + directory + "  " + start);
+        Instant previous = start;
         for (File file : files) {
             if (file.getName().endsWith(".txt")) {
-                System.out.println("  Processing " + file);
+                System.out.print("  Processing " + file);
                 addFile(file);
+                Instant now = Instant.now();
+                System.out.println("  " + Duration.between(previous, now) + " (" + Duration.between(start, now) + ")");
+                previous = now;
             }
         }
     }
@@ -84,7 +91,7 @@ public class SurveillanceSimulator {
             AircraftSurveillanceMessage aircraftSurveillanceMessage;
             while ((aircraftSurveillanceMessage = surveillanceLogFileReader.read()) != null) {
                 simulationTime = aircraftSurveillanceMessage.getTimestamp();
-                receiverPosition = new Position(aircraftSurveillanceMessage);
+                updateTimeStats();
                 trimList();
                 update(aircraftSurveillanceMessage);
             }
@@ -112,6 +119,29 @@ public class SurveillanceSimulator {
             pw.println("Extended Squitter Messages: " + extendedSquitterCount);
             pw.println();
 
+            pw.println("Time Statistics");
+            pw.println("First Message Timestamp: " + firstMessageTimestamp);
+            pw.println("Last Message Timestamp: " + lastMessageTimestamp);
+            pw.println("Duration: " + Duration.between(firstMessageTimestamp, lastMessageTimestamp));
+            pw.println("Max Message Gap: " + maxMessageGap);
+            pw.println("Max Message Gap Start: " + maxMessageGapStart);
+            pw.println("Max Message Gap End: " + maxMessageGapEnd);
+            pw.println();
+
+            pw.println("Number of Tracks: " + aircraftTrackCount);
+            pw.println();
+
+            long total = 0;
+            for (int i = 0; i < distanceHistogram.length; i++) {
+                total += distanceHistogram[i];
+            }
+            int percentileIndex = 0;
+            for (long j = 0; j < (total * 0.95); percentileIndex++) {
+                j += distanceHistogram[percentileIndex];
+            }
+            pw.println("Receiver Distance 95th Percentile: " + percentileIndex);
+            pw.println();
+
             pw.println("ADSB 1090 MHz Messages");
             pw.println("Type\tCount");
             for (int i = 0; i < adsb1090TypeCounts.length; i++) {
@@ -119,26 +149,34 @@ public class SurveillanceSimulator {
             }
             pw.println();
 
-            pw.println("Maximum Reception Distance Table");
-            pw.println("bearing\tdistance\taircraft");
-            double maxDistance = 0;
-            String maxAircraft = "";
-            for (int i = 0; i < distances.length; i++) {
-                pw.println(i + "\t" + distances[i] + "\t" + aircraftAtMaxDistance[i]);
-                if (distances[i] > maxDistance) {
-                    maxDistance = distances[i];
-                    maxAircraft = aircraftAtMaxDistance[i];
-                }
+            pw.println("Receiver Distance Histogram");
+            pw.println("Distance\tCount");
+            for (int i = 0; i < distanceHistogram.length; i++) {
+                pw.println(i + "\t" + distanceHistogram[i]);
             }
             pw.println();
-
-            pw.println("Maximum Reception Distance: " + maxDistance);
-            pw.println("Aircraft: " + maxAircraft);
 
             pw.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    private void updateTimeStats() {
+        if (firstMessageTimestamp.equals(Instant.MAX)) {
+            firstMessageTimestamp = simulationTime;
+            previousMessageTimestamp = simulationTime;
+        }
+
+        lastMessageTimestamp = simulationTime;
+
+        Duration gap = Duration.between(previousMessageTimestamp, simulationTime);
+        if (gap.compareTo(maxMessageGap) > 0) {
+            maxMessageGap = gap;
+            maxMessageGapStart = previousMessageTimestamp;
+            maxMessageGapEnd = simulationTime;
+        }
+        previousMessageTimestamp = simulationTime;
     }
 
     private void update(AircraftSurveillanceMessage aircraftSurveillanceMessage) {
@@ -208,35 +246,20 @@ public class SurveillanceSimulator {
             Aircraft aircraft = aircraftList.get(i);
             if (Duration.between(aircraft.getUpdateTimestamp(), timestamp).compareTo(TRACK_TIME_LIMIT) >= 0) {
                 List<AircraftState> collapsedStateList = aircraft.getCollapsedAircraftStateList();
+
                 if (collapsedStateList.size() >= MIN_TRACK_POINTS) {
                     aircraftTrackCount++;
 
                     if (trackEnabled) {
                         aircraft.writeKmlFile(trackDirectory);
                     }
+                }
 
+                if (collapsedStateList.size() >= MIN_PERFORMANCE_POINTS) {
                     for (AircraftState aircraftState : collapsedStateList) {
-                        Position aircraftPosition = new Position(aircraftState);
-                        positionList.add(aircraftPosition);
-
-                        if (receiverPosition != null) {
-                            try {
-                                double distance = Position.distance(receiverPosition, aircraftPosition) * 0.000539957;  // convert meters to nautical miles
-                                double course = Position.course(receiverPosition, aircraftPosition);
-                                int bearing = (int) Math.floor(course);
-
-                                if (distance > distances[bearing]) {
-                                    distances[bearing] = distance;
-
-                                    Instant updateTimestamp = collapsedStateList.get(0).getUpdateTimestamp();
-                                    LocalDateTime localDateTime = LocalDateTime.ofInstant(updateTimestamp, ZoneId.systemDefault());
-                                    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
-                                    String name = dtf.format(localDateTime) + "." + String.format("%06X", aircraft.getAddress());
-                                    aircraftAtMaxDistance[bearing] = name;
-                                }
-                            } catch (Position.IterationLimitExceeded iterationLimitExceeded) {
-                            }
-
+                        int distance = (int) Math.floor(aircraftState.getDistanceFromReceiver());
+                        if (distance < distanceHistogram.length) {
+                            distanceHistogram[distance]++;
                         }
                     }
                 }

@@ -112,7 +112,7 @@ public class Aircraft {
                 }
             }
 
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd.HH-mm-ss");
             String name = dtf.format(localDateTime) + "." + String.format("%06X", address);
             String path = kmlDirectory + fs + name + ".kml";
             PrintWriter kml = new PrintWriter(path);
@@ -378,12 +378,10 @@ public class Aircraft {
     }
 
     private void updateAirbornePosition(AirbornePosition airbornePosition, Instant timestamp) {
-        //System.out.println(String.format("%x", address));
         aircraftPosition.updateAirborne(airbornePosition.getCompactPositionReport(), timestamp);
 
-        Position position = aircraftPosition.getPosition();
-        if (position != null) {
-            aircraftState.setPosition(position.getLatitude(), position.getLongitude(), aircraftPosition.isAirborne(), aircraftPosition.getPositionTimestamp());
+        if (aircraftPosition.getPosition() != null) {
+            aircraftState.setPosition(aircraftPosition);
 
             if (airbornePosition.isAltitudeAvailable()) {
                 aircraftState.setAltitude(airbornePosition.getAltitude(), timestamp);
@@ -498,9 +496,8 @@ public class Aircraft {
     private void updateSurfacePosition(SurfacePosition surfacePosition, Instant timestamp) {
         aircraftPosition.updateSurface(surfacePosition.getCompactPositionReport(), timestamp);
 
-        Position position = aircraftPosition.getPosition();
-        if (position != null) {
-            aircraftState.setPosition(position.getLatitude(), position.getLongitude(), aircraftPosition.isAirborne(), aircraftPosition.getPositionTimestamp());
+        if (aircraftPosition.getPosition() != null) {
+            aircraftState.setPosition(aircraftPosition);
         }
     }
 
