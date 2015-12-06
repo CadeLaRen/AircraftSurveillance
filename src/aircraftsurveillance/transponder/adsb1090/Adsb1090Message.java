@@ -1,10 +1,10 @@
 package aircraftsurveillance.transponder.adsb1090;
 
 public abstract class Adsb1090Message {
-    protected int[] originalMessage;
+    int[] originalMessage;
 
-    protected int typeCode;
-    protected int subtypeCode;
+    int typeCode;
+    int subtypeCode;
 
     /**
      * @return 5-bit type code
@@ -134,7 +134,7 @@ public abstract class Adsb1090Message {
      * @param length   the total number of bits to extract, not to exceed 31
      * @return the int extracted from the array
      */
-    protected static int extractInt(int[] data, int startBit, int length) {
+    static int extractInt(int[] data, int startBit, int length) {
         if (data == null) {
             throw new IllegalArgumentException("data == null");
         }
@@ -161,9 +161,7 @@ public abstract class Adsb1090Message {
 
         // extractInt the bits needed for the return value
         int[] returnBits = new int[length];
-        for (int i = 0; i < returnBits.length; i++) {
-            returnBits[i] = bits[startBit + i];
-        }
+        System.arraycopy(bits, startBit, returnBits, 0, returnBits.length);
 
         // convert the return bits into an integer
         // this loop could be combined with the loop in the previous step, but is kept separate for better readability
@@ -183,7 +181,7 @@ public abstract class Adsb1090Message {
      * @param startBit a zero-based index of the first bit (MSB) to extract
      * @return true if the bit is set, false otherwise
      */
-    protected static boolean extractBoolean(int[] data, int startBit) {
+    static boolean extractBoolean(int[] data, int startBit) {
         return extractInt(data, startBit, 1) == 1;
     }
 

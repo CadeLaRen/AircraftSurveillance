@@ -17,7 +17,7 @@ import java.util.List;
 
 public class SurveillanceSimulator {
 
-    private List<Aircraft> aircraftList = new LinkedList<Aircraft>();
+    private final List<Aircraft> aircraftList = new LinkedList<Aircraft>();
     private Instant simulationTime = Instant.MIN;
 
     private boolean trackEnabled = false;
@@ -32,7 +32,7 @@ public class SurveillanceSimulator {
     private long transponderCount = 0;
     private long modeSCount = 0;
     private long extendedSquitterCount = 0;
-    private long[] adsb1090TypeCounts = new long[32];
+    private final long[] adsb1090TypeCounts = new long[32];
 
     // receiver performance
     private static final int MIN_PERFORMANCE_POINTS = 100;
@@ -132,8 +132,8 @@ public class SurveillanceSimulator {
             pw.println();
 
             long total = 0;
-            for (int i = 0; i < distanceHistogram.length; i++) {
-                total += distanceHistogram[i];
+            for (long count : distanceHistogram) {
+                total += count;
             }
             int percentileIndex = 0;
             for (long j = 0; j < (total * 0.95); percentileIndex++) {

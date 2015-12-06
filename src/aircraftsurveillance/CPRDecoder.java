@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class CPRDecoder {
+class CPRDecoder {
 
     private static final double[] nlTable = new double[]{
             10.4704713000, 14.8281743687, 18.1862635707, 21.0293949260, 23.5450448656, 25.8292470706, 27.9389871012,

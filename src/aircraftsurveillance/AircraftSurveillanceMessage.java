@@ -83,12 +83,9 @@ public abstract class AircraftSurveillanceMessage {
 
         // extractInt the bits needed for the return value
         int[] returnBits = new int[length];
-        for (int i = 0; i < returnBits.length; i++) {
-            returnBits[i] = bits[startBit + i];
-        }
+        System.arraycopy(bits, startBit, returnBits, 0, returnBits.length);
 
         // convert the return bits into an integer
-        // this loop could be combined with the loop in the previous step, but is kept separate for better readability
         int returnInt = 0;
         for (int i = 0; i < returnBits.length; i++) {
             returnInt |= (returnBits[i] << ((returnBits.length - 1) - i));

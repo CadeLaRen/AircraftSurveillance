@@ -9,7 +9,7 @@ import java.time.Instant;
 /**
  * Reads aircraft surveillance messages from a log file written using either KineticMessageLogger or SdrMessageLogger.
  */
-public class SurveillanceLogFileReader {
+class SurveillanceLogFileReader {
 
     private BufferedReader bufferedReader;
 
@@ -97,9 +97,7 @@ public class SurveillanceLogFileReader {
             }
 
             int[] modeSData = new int[14];
-            for (int i = 0; i < 14; i++) {
-                modeSData[i] = data[i + 5];
-            }
+            System.arraycopy(data, 5, modeSData, 0, 14);
 
             return ModeSMessage.parse(timestamp, latitude, longitude, altitude, modeSData);
         } else if (packetType == 0x07) {
@@ -109,9 +107,7 @@ public class SurveillanceLogFileReader {
             }
 
             int[] modeSData = new int[7];
-            for (int i = 0; i < 7; i++) {
-                modeSData[i] = data[i + 5];
-            }
+            System.arraycopy(data, 5, modeSData, 0, modeSData.length);
 
             return ModeSMessage.parse(timestamp, latitude, longitude, altitude, modeSData);
         } else if (packetType == 0x09) {
@@ -121,9 +117,8 @@ public class SurveillanceLogFileReader {
             }
 
             int[] modeCData = new int[2];
-            for (int i = 0; i < 2; i++) {
-                modeCData[i] = data[i + 5];
-            }
+            modeCData[0] = data[5];
+            modeCData[1] = data[6];
 
             // todo - might want to change this to ModeACMessage.parse()
             return TransponderMessage.parse(timestamp, latitude, longitude, altitude, modeCData);

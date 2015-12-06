@@ -43,8 +43,9 @@ public class Adsb1090UnknownMessage extends Adsb1090Message {
         sb.append("Adsb1090UnknownMessage");
         sb.append(System.lineSeparator());
         sb.append("original message = 0x");
-        for (int p = 0; p < originalMessage.length; p++)
-            sb.append(String.format("%02x", originalMessage[p]));
+        for (int i : originalMessage) {
+            sb.append(String.format("%02x", i));
+        }
         sb.append(System.lineSeparator());
         sb.append("type code = " + typeCode);
         sb.append(System.lineSeparator());

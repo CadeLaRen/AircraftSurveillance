@@ -559,7 +559,7 @@ public class AircraftState {
             return false;
         }
 
-        if (identification != aircraftState.identification) {
+        if (!identification.equals(aircraftState.identification)) {
             return false;
         }
         if (identificationTimestamp != aircraftState.identificationTimestamp) {

@@ -16,13 +16,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Aircraft {
+class Aircraft {
     private int address = 0;
     private Instant updateTimestamp = Instant.MIN;
-    private AircraftPosition aircraftPosition = new AircraftPosition();
+    private final AircraftPosition aircraftPosition = new AircraftPosition();
 
-    private AircraftState aircraftState = new AircraftState();
-    private List<AircraftState> aircraftStateList = new LinkedList<AircraftState>();
+    private final AircraftState aircraftState = new AircraftState();
+    private final List<AircraftState> aircraftStateList = new LinkedList<AircraftState>();
 
     public Aircraft(int address) {
         this.address = address;
@@ -53,7 +53,7 @@ public class Aircraft {
     }
 
     public List<AircraftState> getCollapsedAircraftStateList() {
-        return collapseStateList(aircraftStateList);
+        return collapseStateList();
     }
 
     public Position getPosition() {
@@ -89,7 +89,7 @@ public class Aircraft {
     }
 
     public void writeKmlFile(File directory) {
-        writeKmlFile(address, collapseStateList(aircraftStateList), directory);
+        writeKmlFile(address, collapseStateList(), directory);
     }
 
     private static void writeKmlFile(long address, List<AircraftState> aircraftStateList, File directory) {
@@ -140,8 +140,7 @@ public class Aircraft {
             kml.println("<altitudeMode>clampToGround</altitudeMode>");
             kml.println("<coordinates>");
 
-            for (int i = 0; i < aircraftStateList.size(); i++) {
-                AircraftState state = aircraftStateList.get(i);
+            for (AircraftState state : aircraftStateList) {
                 if (!state.isAirborne()) {
                     kml.println(state.getLongitude() + "," + state.getLatitude() + "," + (((double) state.getAltitude()) * 0.3048) + " ");
                 }
@@ -174,8 +173,7 @@ public class Aircraft {
             kml.println("<altitudeMode>absolute</altitudeMode>");
             kml.println("<coordinates>");
 
-            for (int i = 0; i < aircraftStateList.size(); i++) {
-                AircraftState state = aircraftStateList.get(i);
+            for (AircraftState state : aircraftStateList) {
                 if (state.isAirborne()) {
                     kml.println(state.getLongitude() + "," + state.getLatitude() + "," + (((double) state.getAltitude()) * 0.3048) + " ");
                 }
@@ -289,13 +287,12 @@ public class Aircraft {
         }
     }
 
-    private List<AircraftState> collapseStateList(List<AircraftState> inputList) {
+    private List<AircraftState> collapseStateList() {
         List<AircraftState> outputList = new LinkedList<AircraftState>();
 
         double previousLatitude = Double.MAX_VALUE;
         double previousLongitude = Double.MAX_VALUE;
-        for (int i = 0; i < aircraftStateList.size(); i++) {
-            AircraftState state = aircraftStateList.get(i);
+        for (AircraftState state : aircraftStateList) {
             if (state.positionHasBeenSet() & state.altitudeHasBeenSet() & (state.getLatitude() != previousLatitude | state.getLongitude() != previousLongitude)) {
                 outputList.add(state);
                 previousLatitude = state.getLatitude();

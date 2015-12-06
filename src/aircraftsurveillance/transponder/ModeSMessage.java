@@ -4,7 +4,7 @@ import java.time.Instant;
 
 public abstract class ModeSMessage extends TransponderMessage {
 
-    protected int dataFormat = 0;
+    int dataFormat = 0;
 
     public static ModeSMessage parse(Instant timestamp, Double receiverLatitude, Double receiverLongitude, Double receiverAltitude, int[] data) {
         if (data == null) {

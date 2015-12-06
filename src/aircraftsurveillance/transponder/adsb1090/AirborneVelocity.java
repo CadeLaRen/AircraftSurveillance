@@ -14,20 +14,20 @@ package aircraftsurveillance.transponder.adsb1090;
 
 public abstract class AirborneVelocity extends Adsb1090Message {
 
-    protected boolean intentChangeFlag;
-    protected boolean reservedA;
-    protected int navigationAccuracyCategoryVelocity;
-    protected boolean verticalRateSource;
-    protected boolean verticalRateSign;
-    protected boolean verticalRateAvailable;
-    protected boolean verticalRateOverflow;
-    protected int verticalRate;
-    protected boolean reservedB1;
-    protected boolean reservedB2;
-    protected boolean geometricHeightDifferenceSign;
-    protected boolean geometricHeightDifferenceAvailable;
-    protected boolean geometricHeightDifferenceOverflow;
-    protected int geometricHeightDifference;
+    boolean intentChangeFlag;
+    boolean reservedA;
+    int navigationAccuracyCategoryVelocity;
+    boolean verticalRateSource;
+    boolean verticalRateSign;
+    boolean verticalRateAvailable;
+    boolean verticalRateOverflow;
+    int verticalRate;
+    boolean reservedB1;
+    boolean reservedB2;
+    boolean geometricHeightDifferenceSign;
+    boolean geometricHeightDifferenceAvailable;
+    boolean geometricHeightDifferenceOverflow;
+    int geometricHeightDifference;
 
     /**
      * Decodes 7 bytes of data into an ADS-B Airborne Velocity message.
@@ -205,7 +205,7 @@ public abstract class AirborneVelocity extends Adsb1090Message {
      * @return velocity in knots
      * @throws Adsb1090ParseException
      */
-    protected static int decodeVelocity(int encodedVelocity, int subtypeCode) throws Adsb1090ParseException {
+    static int decodeVelocity(int encodedVelocity, int subtypeCode) throws Adsb1090ParseException {
         if ((subtypeCode < 1) | (subtypeCode > 4)) {
             throw new Adsb1090ParseException("AirborneVelocity.decodeVelocity(encodedVelocity == " + encodedVelocity + ", subtypeCode == " + subtypeCode + "): invalid sub type code (subtypeCode < 1) | (subtypeCode > 4)");
         }
@@ -237,7 +237,7 @@ public abstract class AirborneVelocity extends Adsb1090Message {
      * @return vertical rate in feet per minute
      * @throws Adsb1090ParseException
      */
-    protected static int decodeVerticalRate(int encodedVerticalRate) throws Adsb1090ParseException {
+    static int decodeVerticalRate(int encodedVerticalRate) throws Adsb1090ParseException {
         if ((encodedVerticalRate < 0) | (encodedVerticalRate > 511)) {
             throw new Adsb1090ParseException("AirborneVelocity.decodeVerticalRate(encodedVerticalRate == " + encodedVerticalRate + "): encoded vertical rate is not valid (encodedVerticalRate < 0) | (encodedVerticalRate > 511)");
         }
@@ -256,7 +256,7 @@ public abstract class AirborneVelocity extends Adsb1090Message {
      * @param encodedGeometricHeightDifference encoded height difference from raw message, valid range is 0-127
      * @return geometric height difference in feet
      */
-    protected static int decodeGeometricHeightDifference(int encodedGeometricHeightDifference) throws Adsb1090ParseException {
+    static int decodeGeometricHeightDifference(int encodedGeometricHeightDifference) throws Adsb1090ParseException {
         if ((encodedGeometricHeightDifference < 0) | (encodedGeometricHeightDifference > 127)) {
             throw new Adsb1090ParseException("AirborneVelocity.decodeGeometricHeightDifference(encodedGeometricHeightDifference == " + encodedGeometricHeightDifference + "): encoded geometric height differrerence is not valid (encodedGeometricHeightDifference < 0) | (encodedGeometricHeightDifference > 127)");
         }

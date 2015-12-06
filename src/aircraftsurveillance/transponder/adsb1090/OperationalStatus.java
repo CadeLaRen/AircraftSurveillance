@@ -13,12 +13,12 @@ package aircraftsurveillance.transponder.adsb1090;
 
 public abstract class OperationalStatus extends Adsb1090Message {
 
-    protected int versionNumber;
-    protected boolean nicSupplementA;
-    protected int nacPosition;
-    protected int sourceIntegrityLevel;
-    protected boolean hrd;
-    protected boolean silSupplement;
+    int versionNumber;
+    boolean nicSupplementA;
+    int nacPosition;
+    int sourceIntegrityLevel;
+    boolean hrd;
+    boolean silSupplement;
 
     /**
      * Decodes 7 bytes of data into an ADS-B Operational Status message.

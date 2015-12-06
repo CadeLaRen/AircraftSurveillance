@@ -1,8 +1,8 @@
 package aircraftsurveillance;
 
 public class Position {
-    private double latitude;
-    private double longitude;
+    private final double latitude;
+    private final double longitude;
 
     private static final double a = 6378137.0; // semi-major axis in meters
     private static final double b = 6356752.314245; // semi-minor axis in meters
@@ -90,13 +90,6 @@ public class Position {
 
     }
 
-    /**
-     * @param position1
-     * @param course
-     * @param distance  in meters
-     * @return result of the direct calculation
-     * @throws IterationLimitExceeded
-     */
     private static Result direct(Position position1, double course, double distance) throws IterationLimitExceeded {
         Result result = new Result();
         result.position1 = position1;
@@ -154,12 +147,6 @@ public class Position {
         return result;
     }
 
-    /**
-     * @param position1
-     * @param position2
-     * @return result of the inverse calculation
-     * @throws IterationLimitExceeded
-     */
     private static Result inverse(Position position1, Position position2) throws IterationLimitExceeded {
         Result result = new Result();
         result.position1 = position1;
@@ -217,8 +204,8 @@ public class Position {
     }
 
     /**
-     * @param a
-     * @param b
+     * @param a first position
+     * @param b second position
      * @return distance between a and b in meters
      * @throws IterationLimitExceeded
      */
@@ -232,8 +219,8 @@ public class Position {
     }
 
     /**
-     * @param a
-     * @param b
+     * @param a first position
+     * @param b second position
      * @return the bearing from a to b in degrees
      * @throws IterationLimitExceeded
      */

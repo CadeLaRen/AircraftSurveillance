@@ -5,7 +5,7 @@ import aircraftsurveillance.transponder.adsb1090.CompactPositionReport;
 import java.time.Duration;
 import java.time.Instant;
 
-public class AircraftPosition {
+class AircraftPosition {
 
     private Position position = null;
     private Instant positionTimestamp = Instant.MIN;
@@ -20,8 +20,10 @@ public class AircraftPosition {
     private CompactPositionReport previousSurfaceCpr = null;
     private Instant previousSurfaceTimestamp = Instant.MIN;
 
-    private final Duration AGE_LIMIT = Duration.ofSeconds(10);
-    private static final int TRACK_MAX_SPEED = 1000;  // maximum speed in knots
+    private static final Duration AGE_LIMIT = Duration.ofSeconds(10);
+    private static final int MAX_TRACK_SPEED = 1000;  // maximum speed in knots
+    private static final int MAX_RECEIVER_DISTANCE = 350;  // maximum realistic reception distance in nautical miles
+    private static final int MAX_PREVIOUS_POSITION_DISTANCE = 250;  // maximum distance from previous position in nautical miles
 
     public AircraftPosition() {
     }
@@ -38,7 +40,7 @@ public class AircraftPosition {
         return getPositionAge(Instant.now());
     }
 
-    public Duration getPositionAge(Instant timestamp) {
+    private Duration getPositionAge(Instant timestamp) {
         return Duration.between(positionTimestamp, timestamp);
     }
 
@@ -87,27 +89,19 @@ public class AircraftPosition {
 
                 }
 
-                double maxReceiverDistance = 500.0;
-                double maxPreviousDistance = 250.0;
+                double maxPreviousDistance = MAX_PREVIOUS_POSITION_DISTANCE;
                 if (position != null & positionTimestamp != Instant.MIN) {
+                    // reduce the maximum previous distance to a more realistic value
                     Duration positionAge = Duration.between(positionTimestamp, cprTimestamp);
                     double positionSeconds = positionAge.getSeconds() + 10; // 10 seconds extra to prevent false rejections
-                    maxPreviousDistance = (positionSeconds / 3600.0) * TRACK_MAX_SPEED;
+                    maxPreviousDistance = (positionSeconds / 3600.0) * MAX_TRACK_SPEED;
                 }
 
-                if (receiverDistance < maxReceiverDistance & previousDistance < maxPreviousDistance) {
+                if (receiverDistance < MAX_RECEIVER_DISTANCE & previousDistance < maxPreviousDistance) {
                     position = tempPosition;
                     positionTimestamp = cprTimestamp;
                     airborne = true;
                     surface = false;
-                } else {
-//                    System.out.println("AircraftPosition.updateAirborne(CompactPositionReport cpr, Instant cprTimestamp)");
-//                    System.out.println(" unable to update airborne position");
-//                    System.out.println(" receiverDistance == " + receiverDistance);
-//                    System.out.println(" maxReceiverDistance == " + maxReceiverDistance);
-//                    System.out.println(" previousDistance == " + previousDistance);
-//                    System.out.println(" maxPreviousDistance == " + maxPreviousDistance);
-//                    System.out.println();
                 }
             }
         }
