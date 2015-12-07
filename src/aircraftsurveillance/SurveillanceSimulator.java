@@ -136,9 +136,10 @@ public class SurveillanceSimulator {
                 total += count;
             }
             int percentileIndex = 0;
-            for (long j = 0; j < (total * 0.95); percentileIndex++) {
+            for (long j = 0; (j < (total * 0.95)) & (percentileIndex < distanceHistogram.length); percentileIndex++) {
                 j += distanceHistogram[percentileIndex];
             }
+            percentileIndex--;
             pw.println("Receiver Distance 95th Percentile: " + percentileIndex);
             pw.println();
 
